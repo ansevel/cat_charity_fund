@@ -13,7 +13,9 @@ from app.models import Donation
 from app.schemas.charity_project import (
     CharityProjectCreate, CharityProjectDB, CharityProjectUpdate
 )
-from app.services.investment_process import run_investment_process
+from app.services.investment_process import (
+    run_investment_process, close_fully_invested_obj
+)
 
 router = APIRouter(prefix='/charity_project', tags=['Charity Projects'])
 
@@ -101,5 +103,7 @@ async def update_charity_project(
         await check_name_duplicate(obj_in.name, session)
     if obj_in.full_amount is not None:
         check_new_amount_more_than_invested(db_project, obj_in)
+    if obj_in.full_amount == db_project.invested_amount:
+        await close_fully_invested_obj(db_project)
     db_project = await charity_project_crud.update(db_project, obj_in, session)
     return db_project
