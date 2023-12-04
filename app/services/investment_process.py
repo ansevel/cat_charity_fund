@@ -6,21 +6,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import CharityProject, Donation
 
-DB_obj = Union[CharityProject, Donation]
+DB_OBJ = Union[CharityProject, Donation]
 
 
 async def run_investment_process(
         session: AsyncSession,
-        created_obj: DB_obj,
-        investing_db_model: Union[Type[CharityProject], Type[Donation]]
-) -> DB_obj:
+        created_obj: DB_OBJ,
+        investing_db_model: Union[Type[CharityProject], Type[Donation]],
+) -> DB_OBJ:
     """Запускает процесс инвестирования"""
     invest_available_db_list = await get_not_fully_invested_objs(
         investing_db_model, session
     )
 
     for invest_available_obj in invest_available_db_list:
-        await run_source_destination_change(
+        await run_donation_to_project_invest(
             invest_available_obj, created_obj
         )
         session.add(invest_available_obj)
@@ -47,18 +47,20 @@ async def get_not_fully_invested_objs(
     return invest_available_objs.scalars().all()
 
 
-async def close_fully_invested_obj(obj: DB_obj):
+async def close_fully_invested_obj(obj: DB_OBJ):
     """Закрывает проект или пожертвование."""
     obj.invested_amount = obj.full_amount
     obj.fully_invested = True
     obj.close_date = datetime.now()
 
 
-async def run_source_destination_change(
-        invest_available_obj: DB_obj,
-        created_obj: DB_obj
+async def run_donation_to_project_invest(
+        invest_available_obj: DB_OBJ,
+        created_obj: DB_OBJ,
 ):
-
+    """
+     Если есть доступные пожертвования, инвестирует их в открытые проекты.
+    """
     if invest_available_obj.balance > created_obj.balance:
         invest_available_obj.invested_amount += created_obj.balance
         await close_fully_invested_obj(created_obj)

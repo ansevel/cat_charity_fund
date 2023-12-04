@@ -42,7 +42,7 @@ async def create_donation(
         user: User = Depends(current_user),
 ):
     """Сделать пожертвование."""
-    donation_db = await donation_crud.create(new_donation, session)
+    donation_db = await donation_crud.create(new_donation, session, user)
     invested_donation = await run_investment_process(
         session=session,
         created_obj=donation_db,
