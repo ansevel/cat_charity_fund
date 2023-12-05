@@ -6,14 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import CharityProject, Donation
 
-DB_OBJ = Union[CharityProject, Donation]
+FINANCING_ENTITY = Union[CharityProject, Donation]
 
 
 async def run_investment_process(
         session: AsyncSession,
-        created_obj: DB_OBJ,
+        created_obj: FINANCING_ENTITY,
         investing_db_model: Union[Type[CharityProject], Type[Donation]],
-) -> DB_OBJ:
+) -> FINANCING_ENTITY:
     """Запускает процесс инвестирования"""
     invest_available_db_list = await get_not_fully_invested_objs(
         investing_db_model, session
@@ -47,7 +47,7 @@ async def get_not_fully_invested_objs(
     return invest_available_objs.scalars().all()
 
 
-async def close_fully_invested_obj(obj: DB_OBJ):
+async def close_fully_invested_obj(obj: FINANCING_ENTITY):
     """Закрывает проект или пожертвование."""
     obj.invested_amount = obj.full_amount
     obj.fully_invested = True
@@ -55,8 +55,8 @@ async def close_fully_invested_obj(obj: DB_OBJ):
 
 
 async def run_donation_to_project_invest(
-        invest_available_obj: DB_OBJ,
-        created_obj: DB_OBJ,
+        invest_available_obj: FINANCING_ENTITY,
+        created_obj: FINANCING_ENTITY,
 ):
     """
      Если есть доступные пожертвования, инвестирует их в открытые проекты.

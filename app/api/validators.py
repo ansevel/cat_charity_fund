@@ -1,6 +1,4 @@
-from http import HTTPStatus
-
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.charity_project import charity_project_crud
@@ -17,7 +15,7 @@ async def check_name_duplicate(
     )
     if project_id is not None:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail='Проект с таким именем уже существует!'
         )
 
@@ -29,7 +27,7 @@ async def check_project_exists(
     project = await charity_project_crud.get(project_id, session)
     if project is None:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail='Проект не найден!'
         )
     return project
@@ -38,7 +36,7 @@ async def check_project_exists(
 def check_project_is_not_closed(project: CharityProject) -> None:
     if project.fully_invested:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail='Закрытый проект нельзя редактировать!'
         )
 
@@ -49,7 +47,7 @@ def check_new_amount_more_than_invested(
 ) -> None:
     if obj_in.full_amount < project.invested_amount:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail='Нельзя установить требуемую сумму меньше уже вложенной'
         )
 
@@ -57,6 +55,6 @@ def check_new_amount_more_than_invested(
 def check_invested_project_before_delete(project: CharityProject) -> None:
     if project.invested_amount > 0:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail='В проект были внесены средства, не подлежит удалению!'
         )
